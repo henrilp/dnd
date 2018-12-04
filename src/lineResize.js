@@ -1,14 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Droppable } from 'react-beautiful-dnd';
-import Card from './card';
 import CardResize from './cardResize';
 
 var dotProp = require('dot-prop-immutable');
 
 const CardList = styled.div`
-  border: 1px solid lightgrey;
-  padding: 8px;
+  padding-top: 8px;
   transition: background-color 0.2s ease;
   background-color: ${props => (props.isDraggingOver ? 'skyblue' : 'white')}
 

@@ -6,9 +6,9 @@ flex: 0 0 ${props => props.widthOn16*50-2*8-2*1+'px'};
 */
 
 const ContainerCard = styled.div`
-  border: 1px solid lightgrey;
+  border: 1px solid grey;
   border-radius: 2px;
-  background-color: ${props => (props.isDragging ? 'lightgreen' : 'white')};
+  background-color: ${props => (props.isDragging ? 'lightgreen' : 'lightpink')};
   /*width fixed*/
   flex: 0 0 ${props => props.widthOn16*25-2+'px'};
   text-align: center;

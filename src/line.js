@@ -4,11 +4,10 @@ import Card from './card';
 import { Droppable } from 'react-beautiful-dnd';
 
 const CardList = styled.div`
-  border: 1px solid lightgrey;
   /*hauteur fixe sur l'axe vertical:*/
   flex: 0 0 50px;
 
-  padding: 8px;
+  padding-top: 8px;
   transition: background-color 0.2s ease;
   background-color: ${props => (props.isDraggingOver ? 'skyblue' : 'white')}
   display: flex;
