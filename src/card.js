@@ -29,12 +29,10 @@ const Handle = styled.div`
   text-align: center;
 `;
 
-export default class Card extends React.Component {
+class Card extends React.Component {
 
   render() {
     return (
-      <div style={{display:'flex'}}>
-        {/*** Card ***/}
         <Draggable draggableId={this.props.card.id} index={this.props.index}>
           {(provided, snapshot) => (
             <ContainerCard
@@ -44,27 +42,13 @@ export default class Card extends React.Component {
               widthOn16={this.props.card.widthOn16}
             >
               <Handle {...provided.dragHandleProps} >
-                {this.props.card.content}
+                Tuile {this.props.card.content}<br/>
+              width={this.props.card.widthOn16}
               </Handle>
             </ContainerCard>
           )}
         </Draggable>
-        {/***  ResizableBorder **
-        <Draggable draggableId={this.props.card.id+'-border'} index={this.props.index+10}>
-          {(provided, snapshot) => (
-            <ContainerBorder
-              {...provided.draggableProps}
-              ref={provided.innerRef}
-              isDragging={snapshot.isDragging}
-              widthOn16={this.props.card.widthOn16}
-            >
-              <Handle {...provided.dragHandleProps}>
-              </Handle>
-            </ContainerBorder>
-          )}
-        </Draggable>
-        */}
-      </div>
     );
   }
 }
+export default Card;

@@ -1,8 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Droppable } from 'react-beautiful-dnd';
 import Card from './card';
-import CardResize from './cardResize'
+import { Droppable } from 'react-beautiful-dnd';
 
 const CardList = styled.div`
   border: 1px solid lightgrey;
@@ -15,31 +14,31 @@ const CardList = styled.div`
   display: flex;
   flex-direction:row;
   width: 400px;
-
-  background-image: linear-gradient(to right, black 50%, rgba(255,255,255,0) 0%);
-  background-position: top;
-  background-size: 50px 2px;
-  background-repeat: repeat-x;
 `;
 
-export default class Line extends React.Component {
+class Line extends React.Component {
 
   render() {
     return (
-          <Droppable droppableId={this.props.line.id} direction="horizontal">
-            {(provided, snapshot) => (
-              <CardList
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                isDraggingOver={snapshot.isDraggingOver}
-              >
-                {this.props.cards.map((card, index) =>
-                    <Card key={card.id} card={card} index={index} isLast={(index===this.props.cards.length-1)} />)}
+      <Droppable droppableId={this.props.line.id} direction="horizontal">
+        {(provided, snapshot) => (
+          <CardList
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            isDraggingOver={snapshot.isDraggingOver}
+          >
+            {this.props.cards.map((card, index) =>
+                <Card
+                  key={card.id}
+                  card={card}
+                  index={index}
+                  isLast={(index===this.props.cards.length-1)} />)}
 
-                {provided.placeholder}
-              </CardList>
-            )}
-          </Droppable>
+            {provided.placeholder}
+          </CardList>
+        )}
+      </Droppable>
     );
   }
 }
+export default Line;

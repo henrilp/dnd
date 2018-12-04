@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@atlaskit/css-reset": "^3.0.4",
+    "dot-prop-immutable": "^1.5.0",
     "jquery-resizable-dom": "^0.32.0",
     "react": "^16.6.3",
     "react-beautiful-dnd": "^10.0.2",

@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { DragDropContext } from 'react-beautiful-dnd';
 import initialData from './initial-data';
 import Line from './line';
-import LineResize from './line';
+import LineResize from './lineResize';
 
 const ResizableBox = require('react-resizable').ResizableBox;
 
@@ -14,8 +14,8 @@ const Container = styled.div`
   height: 400px;
 `;
 
-class App extends React.Component {
-  state = {data:initialData,mode:'resize'};
+export default class App extends React.Component {
+  state = {data:initialData,mode:'dnd'};
 
   onDragEnd = result => {
     const { destination, source, draggableId } = result;
@@ -52,7 +52,7 @@ class App extends React.Component {
         },
       };
 
-      this.setState(newData);
+      this.setState({data:newData});
       return;
     }
 
@@ -83,18 +83,38 @@ class App extends React.Component {
 
   };
 
+  fillSpaceInStartLine() {
+
+  }
+
+  insertInFinishLine() {
+
+  }
+  
   render() {
     return (
       <DragDropContext onDragEnd={this.onDragEnd}>
         <Container>
+          <button type='button' onClick={()=>{
+              if (this.state.mode=='resize') {
+                this.setState({mode:'dnd'});
+              } else this.setState({mode:'resize'});
+            }}
+          > switch mode </button>
+
           {this.state.data.lineOrder.map(lineId => {
             const line =  this.state.data.lines[lineId];
             const cards = line.cardIds.map(cardId => this.state.data.cards[cardId]);
-            if (this.state.mode=='resize') return <Line key={line.id} line={line} cards={cards}/>;
-            else return <LineResize key={line.id} line={line} cards={cards}/>;
+            if (this.state.mode!='resize') return <Line key={line.id} line={line} cards={cards}/>;
+            else {
+              return <LineResize key={line.id} line={line} cards={cards}/>;
+              }
           })}
         </Container>
+
       </DragDropContext>
+
+
     )
   }
 }
