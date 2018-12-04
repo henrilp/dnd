@@ -8,12 +8,12 @@ var dotProp = require('dot-prop-immutable');
 
 const CardList = styled.div`
   border: 1px solid lightgrey;
-  /*hauteur fixe sur l'axe vertical:*/
-  flex: 0 0 50px;
-
   padding: 8px;
   transition: background-color 0.2s ease;
   background-color: ${props => (props.isDraggingOver ? 'skyblue' : 'white')}
+
+  /*hauteur fixe sur l'axe vertical:*/
+  flex: 0 0 50px;
   display: flex;
   flex-direction:row;
   width: 400px;

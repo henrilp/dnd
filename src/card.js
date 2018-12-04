@@ -8,24 +8,9 @@ flex: 0 0 ${props => props.widthOn16*50-2*8-2*1+'px'};
 const ContainerCard = styled.div`
   border: 1px solid lightgrey;
   border-radius: 2px;
-  padding-left: 8px;
-  padding-right: 8px;
   background-color: ${props => (props.isDragging ? 'lightgreen' : 'white')};
-  width: ${props => props.widthOn16*50-2*8-2*1+'px'};
-`;
-
-const ContainerBorder = styled.div`
-  border: 1px solid lightgrey;
-  border-radius: 2px;
-  padding-left: 8px;
-  padding-right: 8px;
-  width: 5px;
-`;
-
-const Handle = styled.div`
-  height: 100%;
-  width: 100%;
-  background-color: pink;
+  /*width fixed*/
+  flex: 0 0 ${props => props.widthOn16*25-2+'px'};
   text-align: center;
 `;
 
@@ -37,14 +22,13 @@ class Card extends React.Component {
           {(provided, snapshot) => (
             <ContainerCard
               {...provided.draggableProps}
+              {...provided.dragHandleProps}
               ref={provided.innerRef}
               isDragging={snapshot.isDragging}
               widthOn16={this.props.card.widthOn16}
             >
-              <Handle {...provided.dragHandleProps} >
-                Tuile {this.props.card.content}<br/>
-              width={this.props.card.widthOn16}
-              </Handle>
+              id{this.props.card.content}<br/>
+              l={this.props.card.widthOn16}
             </ContainerCard>
           )}
         </Draggable>

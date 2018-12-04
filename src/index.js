@@ -6,6 +6,8 @@ import initialData from './initial-data';
 import Line from './line';
 import LineResize from './lineResize';
 
+var dotProp = require('dot-prop-immutable');
+
 const ResizableBox = require('react-resizable').ResizableBox;
 
 const Container = styled.div`
@@ -64,6 +66,8 @@ export default class App extends React.Component {
       cardIds: startCardIds,
     };
 
+    this.fillSpaceInStartLine(newStart);
+
     const finishCardIds = Array.from(finish.cardIds);
     finishCardIds.splice(destination.index, 0, draggableId);
     const newFinish = {
@@ -83,14 +87,25 @@ export default class App extends React.Component {
 
   };
 
-  fillSpaceInStartLine() {
-
+  fillSpaceInStartLine(newStart) {
+    let totalWidthOn16 = 0;
+    let listOfCardIds = Object.keys(newStart);
+    for (var i = 0; i < listOfCardIds.length; i++) {
+      let cardId = dotProp.get(newStart,listOfCardIds[i])
+      let cardIdWidthOn16 = dotProp.get(this.state.data.cards,cardId+'.widthOn16')
+      totalWidthOn16 = totalWidthOn16 + cardIdWidthOn16;
+    }
+    //on rallonge la dernière card de la start line
+    let IdOfLastCard = listOfCardIds[listOfCardIds.length-1]
+    let formerWidthOn16 = dotProp.get(this.state.data.cards,IdOfLastCard+'.widthOn16')
+    let newData = dotProp.set(this.state.data.cards,'cards.'+IdOfLastCard+'.widthOn16',formerWidthOn16+16-totalWidthOn16)
+    this.setState({data:newData});
   }
 
   insertInFinishLine() {
 
   }
-  
+
   render() {
     return (
       <DragDropContext onDragEnd={this.onDragEnd}>
