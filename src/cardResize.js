@@ -24,16 +24,14 @@ class CardResize extends React.Component {
         axis='x'
         onResize={this.onResize}
       >
-        <div className='box' style={{flex:'0 0 '+width+'px'}}>
-          id = {this.props.card.content}<br/>
-          L = {this.props.card.widthOn16}
+        <div className='box' style={{flex:'0 0 '+width+'px',backgroundColor:this.props.card.color}}>
+          {Math.trunc(100*this.props.card.widthOn16 / 16)}%
         </div>
       </Resizable>
     );
     else return (
-      <div className='box' style={{flex:'0 0 '+width+'px'}}>
-        id = {this.props.card.content}<br/>
-        L = {this.props.card.widthOn16}
+      <div className='box' style={{flex:'0 0 '+width+'px',backgroundColor:this.props.card.color}}>
+          {Math.trunc(100*this.props.card.widthOn16 / 16)}%
       </div>
     );
   }

@@ -38,6 +38,7 @@ class LineResize extends React.Component {
       let newList = dotProp.set(list,index+'.widthOn16',list[index].widthOn16+1)
       let newList2 = dotProp.set(newList,index+1+'.widthOn16',list[index+1].widthOn16-1)
       this.setState({cardList:newList2});
+      this.props.add1OnRight(index)
     }
     return;
   }
@@ -63,8 +64,8 @@ class LineResize extends React.Component {
                       card={card}
                       index={index}
                       isLast={(index===this.state.cardList.length-1)}
-                      add1OnRight={()=>this.add1OnRight(index)}
-                      rmv1OnRight={()=>this.rmv1OnRight(index)}
+                      add1OnRight={()=>this.props.add1OnRight(index)}
+                      rmv1OnRight={()=>this.props.rmv1OnRight(index)}
                     />)}
                   )}
               </CardList>

@@ -1,17 +1,16 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Draggable } from 'react-beautiful-dnd';
-/*
-flex: 0 0 ${props => props.widthOn16*50-2*8-2*1+'px'};
-*/
+import './dnd.css'
 
 const ContainerCard = styled.div`
   border: 1px solid grey;
   border-radius: 2px;
-  background-color: ${props => (props.isDragging ? 'lightgreen' : 'lightpink')};
+  background-color: ${props => (props.isDragging ? 'lightgreen' : props.color)};
   /*width fixed*/
   flex: 0 0 ${props => props.widthOn16*25-2+'px'};
   text-align: center;
+  line-height: 50px;
 `;
 
 class Card extends React.Component {
@@ -26,9 +25,9 @@ class Card extends React.Component {
               ref={provided.innerRef}
               isDragging={snapshot.isDragging}
               widthOn16={this.props.card.widthOn16}
+              color={this.props.card.color}
             >
-              id{this.props.card.content}<br/>
-              l={this.props.card.widthOn16}
+              {Math.trunc(100*this.props.card.widthOn16 / 16)}%
             </ContainerCard>
           )}
         </Draggable>
