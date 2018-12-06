@@ -12,16 +12,18 @@ const ContainerLines = styled.div`
   display: flex;
   flex-direction: column;
   width: 400px;
-  border: 1px solid lightgrey;
-  float: left;
+  border: 2px solid grey;
+  border-radius: 0.1rem;
 `;
 
 const ContainerSpe = styled.div`
-  border: 2px solid lightgrey;
+  border: 2px solid grey;
+  border-right: 0px;
   width: 200px;
   display: flex;
   flex-direction: column;
-  /*****/
+  float: left;
+  border-radius: 0.1rem;
 `;
 
 const ContainerSpeButton = styled.div`
@@ -54,7 +56,7 @@ const ContainerCard = styled.div`
   transition: flex-basis 500ms ease-in-out;
 `;
 
-
+document.body.style.backgroundColor = "lightgrey";
 
 export default class App extends React.Component {
   state = {data:initialData,mode:'dnd'};
@@ -103,13 +105,13 @@ export default class App extends React.Component {
     //CASE DELETE CARD
     if (destination.droppableId === 'speContainer'
       && source.droppableId !== 'speContainer') {
+        console.log('ici ou là');
       let lineId = source.droppableId;
       let cardList = dotProp.get(newData.lines,lineId+'.cardIds');
       //delete in line
       cardList.splice(cardList.indexOf(cardId),1);
       //delete in cards
       newData = dotProp.delete(newData,'cards.'+cardId);
-      return;
     }
 
     //initiate finishLine
@@ -136,18 +138,27 @@ export default class App extends React.Component {
     //initiate startLine
     startLine = newData.lines[source.droppableId];               //ref
 
-    //ARRANGE STARTLINE CARDS if not new card
-    if (source.droppableId !== 'speContainer') {
-      newData = this.arrangeStartLineCards(newData,startLine.id,cardId);
-    }
+    //CASE SWITCH IN SAME LINE
+    if (startLine === finishLine) {
+      let cardIds = startLine.cardIds.splice(0);
+      cardIds.splice(destination.index,0,cardId);
+      cardIds.splice(source.index+1,1);
+      newData = dotProp.set(newData,'lines.'+startLine.id+'.cardIds',cardIds);
 
-    //ARRANGE FINISHLINE CARDS if not delete card
-    if (!(destination.droppableId === 'speContainer' && source.droppableId !== 'speContainer')) {
-      newData = this.arrangeFinishLineCards(newData,finishLine.id,cardId,destination.index);
-    }
+    }//ELSE
+    else {//ARRANGE STARTLINE CARDS if not new card
+      if (source.droppableId !== 'speContainer') {
+        newData = this.arrangeStartLineCards(newData,startLine.id,cardId);
+      }
 
-    //clean empty lines
-    newData = this.rmvLineIfNeeded(newData);
+      //ARRANGE FINISHLINE CARDS if not delete card
+      if (!(destination.droppableId === 'speContainer' && source.droppableId !== 'speContainer')) {
+        newData = this.arrangeFinishLineCards(newData,finishLine.id,cardId,destination.index);
+      }
+
+      //clean empty lines
+      newData = this.rmvLineIfNeeded(newData);
+    }
 
     // YESSS
     this.setState({data:newData});
@@ -245,22 +256,7 @@ export default class App extends React.Component {
   render() {
     return (
         <DragDropContext onDragEnd={this.onDragEnd} >
-          <div style={{display:'flex'}}>
-            <ContainerLines>
-              {this.state.data.lineOrder.map(lineId => {
-                const line =  this.state.data.lines[lineId];
-                const cards = line.cardIds.map(cardId => this.state.data.cards[cardId]);
-                if (this.state.mode!=='resize') return <Line key={line.id} line={line} cards={cards}/>;
-                else {
-                  return <LineResize key={line.id} line={line} cards={cards}
-                    rmv1OnRight={(e)=>this.rmv1OnRight(lineId,e)}
-                    add1OnRight={(e)=>this.add1OnRight(lineId,e)}/>;
-                  }
-              })}
-              {/*** EMPTY LINE ***/}
-              {this.state.mode!=='resize' ? <Line line={{id:'lineEmpty'}} cards={[]}/>
-            : <LineResize line={{id:'lineEmpty'}} cards={[]}/>}
-            </ContainerLines>
+          <div style={{display:'flex', margin:'auto',position:'absolute',left:'200px',top:'100px'}}>
 
             {/*******  CONTAINER SPE   ******/}
             <ContainerSpe>
@@ -302,6 +298,25 @@ export default class App extends React.Component {
                 )}
               </Droppable>
             </ContainerSpe>
+
+            {/*** CONTAINER LINES ***/}
+            <ContainerLines>
+              {this.state.data.lineOrder.map(lineId => {
+                const line =  this.state.data.lines[lineId];
+                const cards = line.cardIds.map(cardId => this.state.data.cards[cardId]);
+                if (this.state.mode!=='resize') return <Line key={line.id} line={line} cards={cards}/>;
+                else {
+                  return <LineResize key={line.id} line={line} cards={cards}
+                    rmv1OnRight={(e)=>this.rmv1OnRight(lineId,e)}
+                    add1OnRight={(e)=>this.add1OnRight(lineId,e)}/>;
+                  }
+              })}
+              {/*** EMPTY LINE ***/}
+              {this.state.mode!=='resize' ? <Line line={{id:'lineEmpty'}} cards={[]}/>
+            : <LineResize line={{id:'lineEmpty'}} cards={[]}/>}
+            </ContainerLines>
+
+
           </div>
         </DragDropContext>
     )

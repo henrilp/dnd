@@ -6,7 +6,8 @@ import './dnd.css'
 const ContainerCard = styled.div`
   border: 1px solid grey;
   border-radius: 2px;
-  background-color: ${props => (props.isDragging ? 'lightgreen' : props.color)};
+  background-color: ${props => props.color};
+  ${props => (props.isDragging ? 'box-shadow: 0 0 5px 2px white' : 0)};
   /*width fixed*/
   flex: 0 0 ${props => props.widthOn16*25-2+'px'};
   text-align: center;
