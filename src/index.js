@@ -51,6 +51,7 @@ const ContainerCard = styled.div`
   text-align: center;
   line-height: 50px;
   width: 48px;
+  transition: flex-basis 500ms ease-in-out;
 `;
 
 
@@ -71,195 +72,174 @@ export default class App extends React.Component {
   onDragEnd = result => {
     const { destination, source, draggableId } = result;
 
-    if (!destination) {
-      return;
-    }
-
+    //CASES WHERE DOES NOTHING
+    if (!destination) return;
     if (
       destination.droppableId === source.droppableId &&
       destination.index === source.index
-    ) {
-      return;
-    }
-    /******************* delete card case *****************/
-    if (destination.droppableId === 'speContainer' && source.droppableId !== 'speContainer') {
-      let lineId = source.droppableId;
-      let newData = this.state.data;
-      let cardsOfLine = dotProp.get(newData.lines,lineId+'.cardIds');
-      cardsOfLine.splice(cardsOfLine.indexOf(draggableId),1);
-      newData = dotProp.delete(newData,'cards.'+draggableId);
-      newData = this.fillSpaceInStartLine(newData,dotProp.get(newData.lines,lineId));
+    ) return;
 
-      /******* delete line case *****/
-      let lineOrder = newData.lineOrder;
-      if (dotProp.get(newData.lines,lineId+'.cardIds').length === 0
-        && lineOrder.indexOf(lineId) === lineOrder.length - 1
-      ) {
-        lineOrder.splice(lineOrder.indexOf(lineId),1)
-        newData = dotProp.delete(newData,'lines.'+lineId);
-      }
-      console.log(newData)
-      this.setState({data:newData});
-      return;
-    }
-    /******************* new card case *****************/
+    let newData = this.state.data;
+    let startLine, finishLine, cardId;
+
+    //initiate cardId
+    //CASE CREATE CARD
     if (source.droppableId === 'speContainer') {
-      let newData;
-      let cardId = 'newCard-0';
-
-      while (this.state.data.cards.hasOwnProperty(cardId)) {
+      //update cardId
+      cardId = 'newCard-0';
+      while (newData.cards.hasOwnProperty(cardId)) {
         let num = parseInt(cardId.split('-')[1])+1;
         cardId = 'newCard-'+num; /*unique ID*/
-      }
+      }//update newData.cards
       let newCard = {
           id: cardId,
           color:this.getRandomColor(),
           widthOn16:2,
       };
-      newData = dotProp.merge(this.state.data,'cards.'+cardId,newCard);
+      newData = dotProp.merge(newData,'cards.'+cardId,newCard);
+    } // ELSE
+    else cardId = draggableId;
 
-      if (destination.droppableId === 'lineEmpty'){
-        /***** new line case ****/
-        newData = dotProp.set(newData,'cards.'+cardId+'.widthOn16',16);
-        let lineId = 'newLine-0';
-        while (this.state.data.lines.hasOwnProperty(lineId)) {
-          let num = parseInt(lineId.split('-')[1])+1;
-          lineId = 'newLine-'+num; /*unique ID*/
-        }
-        let newLine = {
-            id: lineId,
-            cardIds:[cardId],
-        };
-        newData = dotProp.merge(newData,'lines.'+lineId,newLine);
-        newData = dotProp.merge(newData,'lineOrder',[lineId])
-      }
-      else { /*** destination : existing line ****/
-        newData = this.insertInFinishLine(newData,destination.droppableId,destination.index,cardId)
-      }
-      this.setState({data:newData})
+    //CASE DELETE CARD
+    if (destination.droppableId === 'speContainer'
+      && source.droppableId !== 'speContainer') {
+      let lineId = source.droppableId;
+      let cardList = dotProp.get(newData.lines,lineId+'.cardIds');
+      //delete in line
+      cardList.splice(cardList.indexOf(cardId),1);
+      //delete in cards
+      newData = dotProp.delete(newData,'cards.'+cardId);
       return;
     }
 
-
-    const start = this.state.data.lines[source.droppableId];
-    const finish = this.state.data.lines[destination.droppableId];
-
-    if (start === finish) {
-      const newCardIds = Array.from(start.cardIds);
-      newCardIds.splice(source.index, 1);
-      newCardIds.splice(destination.index, 0, draggableId);
-
-      const newLine = {
-        ...start,
-        cardIds: newCardIds,
+    //initiate finishLine
+    //CASE CREATE FINISHLINE
+    if (destination.droppableId === 'lineEmpty'){
+      let lineId = 'newLine-0';
+      while (newData.lines.hasOwnProperty(lineId)) {
+        let num = parseInt(lineId.split('-')[1])+1;
+        lineId = 'newLine-'+num; /*unique ID*/
+      }
+      let newLine = {
+          id: lineId,
+          cardIds:[],
       };
+      newData = dotProp.merge(newData,'lines.'+lineId,newLine);
+      newData.lineOrder.push(lineId);
+      finishLine = newData.lines[lineId];                        //ref
+    } //ELSE
+    else finishLine = newData.lines[destination.droppableId];    //ref
 
-      const newData = {
-        ...this.state.data,
-        lines: {
-          ...this.state.data.lines,
-          [newLine.id]: newLine,
-        },
-      };
+    //cancel if finishline already full
+    if (finishLine.cardIds.length === 16) return;
 
-      this.setState({data:newData});
-      return;
+    //initiate startLine
+    startLine = newData.lines[source.droppableId];               //ref
+
+    //ARRANGE STARTLINE CARDS if not new card
+    if (source.droppableId !== 'speContainer') {
+      newData = this.arrangeStartLineCards(newData,startLine.id,cardId);
     }
 
-    //moving a card from one line to another
-    const startCardIds = Array.from(start.cardIds);
-    startCardIds.splice(source.index, 1);
-    const newStart = {
-      ...start,
-      cardIds: startCardIds,
-    };
+    //ARRANGE FINISHLINE CARDS if not delete card
+    if (!(destination.droppableId === 'speContainer' && source.droppableId !== 'speContainer')) {
+      newData = this.arrangeFinishLineCards(newData,finishLine.id,cardId,destination.index);
+    }
 
-    let newData = this.fillSpaceInStartLine(this.state.data,newStart);
+    //clean empty lines
+    newData = this.rmvLineIfNeeded(newData);
 
-    const finishCardIds = Array.from(finish.cardIds);
-    finishCardIds.splice(destination.index, 0, draggableId);
-    const newFinish = {
-      ...finish,
-      cardIds: finishCardIds,
-    };
-
-//receives : newData,destination.droppableId,destination.index,cardId
-    newData = this.insertInFinishLine(newData,destination.droppableId,destination.index,draggableId);
-
-    newData = {
-      ...newData,
-      lines: {
-        ...newData.lines,
-        [newStart.id]: newStart,
-        [newFinish.id]: newFinish,
-      },
-    };
+    // YESSS
     this.setState({data:newData});
-
   };
 
-  fillSpaceInStartLine(data,newStart) {
-    let totalWidthOn16 = 0;
-    let listOfCardIds = dotProp.get(newStart,'cardIds');
-    for (var i = 0; i < listOfCardIds.length; i++) {
-      let cardIdWidthOn16 = dotProp.get(data.cards,listOfCardIds[i]+'.widthOn16')
-      totalWidthOn16 = totalWidthOn16 + cardIdWidthOn16;
-    }
+  arrangeStartLineCards(data,lineId,cardId){
+    let cardIds = data.lines[lineId].cardIds;
+    //delete the card in the line
+    cardIds.splice(cardIds.indexOf(cardId),1);
     //on rallonge la dernière card de la start line
-    let IdOfLastCard = listOfCardIds[listOfCardIds.length-1];
-    let formerWidthOn16 = dotProp.get(data.cards,IdOfLastCard+'.widthOn16');
-    let newData = dotProp.set(data,'cards.'+IdOfLastCard+'.widthOn16',formerWidthOn16+16-totalWidthOn16)
-    return newData;
+    let lastCardId = cardIds[cardIds.length-1];
+    let widthOn16LastCard = dotProp.get(data.cards,lastCardId+'.widthOn16');
+    let widthOn16Card = dotProp.get(data.cards,cardId+'.widthOn16');
+    data = dotProp.set(data,'cards.'+lastCardId+'.widthOn16',widthOn16Card+widthOn16LastCard);
+    return data;
   }
 
-  insertInFinishLine(data,lineId,index,cardId) {
-
-    let cardList = dotProp.get(data,'lines.'+lineId+'.cardIds');
-    cardList.splice(index, 0, cardId);
-
-    if (index !== 0 && index !== cardList.length - 1){
-      let widthAtLeft = dotProp.get(data.cards,cardList[index-1]+'.widthOn16');
-      let widthAtRight = dotProp.get(data.cards,cardList[index+1]+'.widthOn16');
-      if (widthAtLeft > 2 && widthAtRight > 2) {
-        //case big neighbors
-        data = dotProp.set(data,'cards.'+cardId+'.widthOn16',2)
-        data = dotProp.set(data,'cards.'+cardList[index-1]+'.widthOn16',widthAtLeft-1);
-        data = dotProp.set(data,'cards.'+cardList[index+1]+'.widthOn16',widthAtRight-1);
-        return data;
+  arrangeFinishLineCards(data,lineId,cardId,index){
+    let cardIds = data.lines[lineId].cardIds; //ref
+    //case new line
+    if (cardIds.length === 0) {
+      //insert
+      cardIds.push(cardId);
+      data = dotProp.set(data,'cards.'+cardId+'.widthOn16',16);
+    }// else choose 1 or 2 in length then look for big neighbors
+    else {
+      //insert
+      cardIds.splice(index, 0, cardId);
+      if (index !== 0 && index !== cardIds.length - 1){
+        let widthAtLeft = dotProp.get(data.cards,cardIds[index-1]+'.widthOn16');
+        let widthAtRight = dotProp.get(data.cards,cardIds[index+1]+'.widthOn16');
+        if (widthAtLeft > 2 && widthAtRight > 2) {
+          //case big neighbors
+          data = dotProp.set(data,'cards.'+cardId+'.widthOn16',2)
+          data = dotProp.set(data,'cards.'+cardIds[index-1]+'.widthOn16',widthAtLeft-1);
+          data = dotProp.set(data,'cards.'+cardIds[index+1]+'.widthOn16',widthAtRight-1);
+          return data;
+        }
       }
-    }
-    //other case : widthOn16 = 1, check all modulo neighbors in range 1 then 2 etc, if not possible (16 elements in line) return data
-    if ( cardList.length === 17 ) {
-      cardList.splice(index,1);
-      return data;
-    }
-
-    data = dotProp.set(data,'cards.'+cardId+'.widthOn16',1);
-    let range = 1;
-
-    while( range < cardList.length ) {
-      let rightRangedNeighborIndex = Math.abs((index+range) % cardList.length);
-      let rightRangedNeighborWidthOn16 = dotProp.get(data.cards,cardList[rightRangedNeighborIndex]+'.widthOn16');
-      if (rightRangedNeighborWidthOn16 > 1) {
-        data = dotProp.set(data,'cards.'+cardList[rightRangedNeighborIndex]+'.widthOn16',rightRangedNeighborWidthOn16-1);
-        break;
+      //other case : check all modulo neighbors in range 1 then 2 etc
+      data = dotProp.set(data,'cards.'+cardId+'.widthOn16',1);
+      let range = 1;
+      while( range < cardIds.length ) {
+        let rightRangedNeighborIndex = Math.abs((index+range) % cardIds.length);
+        let rightRangedNeighborWidthOn16 = dotProp.get(data.cards,cardIds[rightRangedNeighborIndex]+'.widthOn16');
+        if (rightRangedNeighborWidthOn16 > 1) {
+          data = dotProp.set(data,'cards.'+cardIds[rightRangedNeighborIndex]+'.widthOn16',rightRangedNeighborWidthOn16-1);
+          break;
+        }
+        let leftRangedNeighborIndex = Math.abs((index-range) % cardIds.length);
+        let leftRangedNeighborWidthOn16 = dotProp.get(data.cards,cardIds[leftRangedNeighborIndex]+'.widthOn16');
+        if (leftRangedNeighborWidthOn16 > 1) {
+          data = dotProp.set(data,'cards.'+cardIds[leftRangedNeighborIndex]+'.widthOn16',leftRangedNeighborWidthOn16-1);
+          break;
+        }
+        range++;
       }
-      let leftRangedNeighborIndex = Math.abs((index-range) % cardList.length);
-      let leftRangedNeighborWidthOn16 = dotProp.get(data.cards,cardList[leftRangedNeighborIndex]+'.widthOn16');
-      if (leftRangedNeighborWidthOn16 > 1) {
-        data = dotProp.set(data,'cards.'+cardList[leftRangedNeighborIndex]+'.widthOn16',leftRangedNeighborWidthOn16-1);
-        break;
-      }
-      range++;
     }
     return data;
-
   }
+
+  rmvLineIfNeeded(data){
+    for(var lineId in data.lines) {
+      if (data.lines[lineId].cardIds.length === 0) {
+        data = dotProp.delete(data,'lines.'+lineId);
+        data.lineOrder.splice(data.lineOrder.indexOf(lineId),1);
+      }
+    }
+    return data;
+  }
+
 
   add1OnRight(lineId,index) {
     let line =  this.state.data.lines[lineId];
     let cards = line.cardIds.map(cardId => this.state.data.cards[cardId]);
-    /*cards[index]*/
+    if (index < cards.length-1 && cards[index+1].widthOn16 > 1) {
+      let newData = dotProp.set(this.state.data,'cards.'+cards[index].id+'.widthOn16',cards[index].widthOn16+1);
+      newData = dotProp.set(newData,'cards.'+cards[index+1].id+'.widthOn16',cards[index+1].widthOn16-1);
+      this.setState({data:newData});
+    } else this.setState({message:"Vous avez atteint la taille minimale d'un élément !"})
+    return;
+  }
+
+  rmv1OnRight(lineId,index) {
+    let line =  this.state.data.lines[lineId];
+    let cards = line.cardIds.map(cardId => this.state.data.cards[cardId]);
+    if (cards[index].widthOn16 > 1) {
+      let newData = dotProp.set(this.state.data,'cards.'+cards[index].id+'.widthOn16',cards[index].widthOn16-1);
+      newData = dotProp.set(newData,'cards.'+cards[index+1].id+'.widthOn16',cards[index+1].widthOn16+1);
+      this.setState({data:newData});
+    } else this.setState({message:"Vous avez atteint la taille minimale d'un élément !"})
+    return;
   }
 
   render() {
@@ -272,7 +252,9 @@ export default class App extends React.Component {
                 const cards = line.cardIds.map(cardId => this.state.data.cards[cardId]);
                 if (this.state.mode!=='resize') return <Line key={line.id} line={line} cards={cards}/>;
                 else {
-                  return <LineResize key={line.id} line={line} cards={cards} add1OnRight={(e)=>this.add1OnRight(lineId,e)}/>;
+                  return <LineResize key={line.id} line={line} cards={cards}
+                    rmv1OnRight={(e)=>this.rmv1OnRight(lineId,e)}
+                    add1OnRight={(e)=>this.add1OnRight(lineId,e)}/>;
                   }
               })}
               {/*** EMPTY LINE ***/}

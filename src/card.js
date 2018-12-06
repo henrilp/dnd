@@ -11,6 +11,7 @@ const ContainerCard = styled.div`
   flex: 0 0 ${props => props.widthOn16*25-2+'px'};
   text-align: center;
   line-height: 50px;
+  transition: flex-basis 500ms ease-in-out;
 `;
 
 class Card extends React.Component {
