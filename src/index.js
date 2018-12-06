@@ -102,18 +102,17 @@ export default class App extends React.Component {
     } // ELSE
     else cardId = draggableId;
 
-    //CASE DELETE CARD
+    //COMPLETE CASE DELETE CARD
     if (destination.droppableId === 'speContainer'
       && source.droppableId !== 'speContainer') {
-        console.log('ici ou là');
       let lineId = source.droppableId;
-      let cardList = dotProp.get(newData.lines,lineId+'.cardIds');
-      //delete in line
-      cardList.splice(cardList.indexOf(cardId),1);
-      //delete in cards
+      newData = this.arrangeStartLineCards(newData,lineId,cardId);
+      //delete in cards :
       newData = dotProp.delete(newData,'cards.'+cardId);
+      newData = this.rmvLineIfNeeded(newData);
+      this.setState({data:newData});
+      return;
     }
-
     //initiate finishLine
     //CASE CREATE FINISHLINE
     if (destination.droppableId === 'lineEmpty'){
